@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class InterfaceGenerator {
 
@@ -20,7 +22,9 @@ public class InterfaceGenerator {
         outputFolder.mkdir();
         for(String s : mapping.getClasses())
             if(!s.contains("$"))
-                generateClass(mapping,s,outputFolder);
+                new Thread(() -> {
+                    generateClass(mapping,s,outputFolder);
+                }).start();
     }
 
     private static void generateClass(Mapping mapping,String className,File folder){
@@ -34,13 +38,15 @@ public class InterfaceGenerator {
         File outputFile = new File(folder,outputClassName.replace(".","/")+".java");
         StringBuilder sb = new StringBuilder();
         sb.append("package "+rootPackage+"."+classPackage+";\n\n");
+        sb.append("@WrappedClass(\"" + className + "\")\n");
         sb.append("public interface "+classNameSimple+" {\n");
         if(mapping.getMethods().containsKey(className)){
             for(MethodSignature ms : mapping.getMethods().get(className)){
-                sb.append("    "+ms.getReturnType()+" "+ms.getName()+"();\n");
+                String thePackage = processPackage(ms.getReturnType());
+                sb.append("    "+ thePackage +" "+ms.getName()+"();\n\n");
             }
         }else{
-            sb.append("\n");
+            sb.append("\n\n");
         }
         sb.append("}\n");
         writeFile(outputFile,sb.toString());
@@ -84,4 +90,10 @@ public class InterfaceGenerator {
         Files.delete(path);
     }
 
+    private static String processPackage(String classWithPackage) {
+        if(classWithPackage.endsWith(".String")) {
+            classWithPackage = "String";
+        }
+        return classWithPackage;
+    }
 }
