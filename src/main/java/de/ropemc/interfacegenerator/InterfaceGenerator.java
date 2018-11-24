@@ -1,7 +1,6 @@
 package de.ropemc.interfacegenerator;
 
 import de.ropemc.interfacegenerator.utils.Mapping;
-import de.ropemc.interfacegenerator.utils.MethodSignature;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -65,12 +64,5 @@ public class InterfaceGenerator {
             }
         }
         Files.delete(path);
-    }
-
-    private static String processPackage(String classWithPackage) {
-        if(classWithPackage.endsWith(".String")) {
-            classWithPackage = "String";
-        }
-        return classWithPackage;
     }
 }
