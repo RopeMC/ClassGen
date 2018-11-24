@@ -149,7 +149,6 @@ public class Mapping
                                 for(int i=0;i<dimensions;i++)
                                     arrayType+="[]";
                                 parameterTypes.add(arrayType);
-                                System.out.println(orig_clazz);
                                 break;
                         }
                     }
@@ -168,6 +167,9 @@ public class Mapping
     private static String parseType(String rawType){
         if(rawType.startsWith("L")){
             return rawType.substring(1,rawType.length()-1).replace("/",".");
+        }
+        if(rawType.startsWith("[")){
+            return parseType(rawType.substring(1))+"[]";
         }
         switch (rawType){
             case "D":
