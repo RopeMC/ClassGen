@@ -17,9 +17,7 @@ public class InterfaceGenerator {
         outputFolder.mkdir();
         for(String s : mapping.getClasses())
             if(!s.contains("$"))
-                new Thread(() -> {
-                    generateClass(mapping,s,outputFolder);
-                }).start();
+                new Thread(() -> generateClass(mapping,s,outputFolder)).start();
     }
 
     private static void generateClass(Mapping mapping,String className,File folder){
