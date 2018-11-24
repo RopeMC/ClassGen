@@ -12,20 +12,18 @@ public class InterfaceBuilder {
     @Getter
     private static String rootPackage = "de.ropemc.api.wrapper";
 
-    private static String[] autoImported = {
-            "java.lang.String",
-            "java.lang.Class",
-            "java.lang.Integer",
-            "java.lang.Double",
-            "java.lang.Float",
-            "java.lang.Short",
-            "java.lang.Long"
+    private static String[] commentList = {
+            "$",
+            "tv.twitch",
+            "com.mojang",
+            "com.google.common"
     };
 
     private Mapping mapping;
     private String className;
 
     private List<String> imports = new ArrayList<>();
+    private List<String> importedCommentList = new ArrayList<>();
     private List<String> prototypes = new ArrayList<>();
 
     public InterfaceBuilder(Mapping mapping, String className){
@@ -44,8 +42,13 @@ public class InterfaceBuilder {
         StringBuilder sb = new StringBuilder();
         sb.append("package "+rootPackage+"."+classPackage+";\n\n");
         if(imports.size()>0){
-            for(String is : imports)
-                sb.append("import "+is+";\n");
+            for(String is : imports){
+                if(is.startsWith("//")){
+                    sb.append("//import "+is.substring(2)+";\n");
+                }else{
+                    sb.append("import "+is+";\n");
+                }
+            }
             sb.append("\n");
         }
         sb.append("@WrappedClass(\"" + className + "\")\n");
@@ -73,14 +76,49 @@ public class InterfaceBuilder {
                     i++;
                 }
                 String returnType = preprocessClass(ms.getReturnType());
-                prototypes.add(returnType +" "+ms.getName()+"("+params+");");
+                String proto = returnType +" "+ms.getName()+"("+params+");";
+                for(String s : commentList){
+                    if(proto.contains(s)){
+                        proto = "//"+proto;
+                        break;
+                    }
+                }
+                if(!proto.startsWith("//")){
+                    for(String s : importedCommentList){
+                        if(proto.contains(s)){
+                            proto = "//"+proto;
+                            break;
+                        }
+                    }
+                }
+                prototypes.add(proto);
             }
         }
+        List<String> newImports = new ArrayList<>();
+        for(String i : imports){
+            for(String s : commentList){
+                if(i.contains(s)){
+                    i = "//"+i;
+                    break;
+                }
+            }
+            newImports.add(i);
+        }
+        imports = newImports;
     }
 
     private void addImport(String className){
+        String classPackage = extractPackage(prePreprocessClass(this.className));
+        String importPackage = extractPackage(className);
+        if(importPackage.equals(classPackage))
+            return;
         if(!imports.contains(className))
             imports.add(className);
+    }
+
+    private String extractPackage(String className){
+        String[] split = className.split("\\.");
+        return className.substring(0,className.length()-split[split.length-1].length());
     }
 
     private String preprocessClass(String className){
@@ -89,16 +127,20 @@ public class InterfaceBuilder {
             String iClassName = pClassName.replace("[]","");
             addImport(iClassName);
             String[] classSplit = pClassName.split("\\.");
-            return classSplit[classSplit.length-1];
+            String shortClassName = classSplit[classSplit.length-1];
+            for(String s : commentList)
+                if(pClassName.contains(s))
+                    importedCommentList.add(shortClassName);
+            return shortClassName;
         }
         return pClassName;
     }
 
     private String prePreprocessClass(String className){
         String processClassName = className;
-        for(String s : autoImported){
-            String[] sSplit = s.split("\\.");
-            processClassName = processClassName.replace(s,sSplit[sSplit.length-1]);
+        if(processClassName.startsWith("java.lang.")){
+            String[] sSplit = processClassName.split("\\.");
+            processClassName = sSplit[sSplit.length-1];
         }
         if(processClassName.startsWith("net.minecraft."))
             return rootPackage+"."+processClassName;
