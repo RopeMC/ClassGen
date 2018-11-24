@@ -76,6 +76,7 @@ public class InterfaceBuilder {
                 prototypes.add(returnType +" "+ms.getName()+"("+params+");");
             }
         }
+        addImport("de.ropemc.api.wrapper.WrappedClass");
     }
 
     private void addImport(String className){
