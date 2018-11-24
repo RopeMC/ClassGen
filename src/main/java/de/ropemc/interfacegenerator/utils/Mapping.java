@@ -3,10 +3,7 @@ package de.ropemc.interfacegenerator.utils;
 import lombok.Getter;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Mapping
 {
@@ -57,9 +54,106 @@ public class Mapping
                     {
                         mm = new ArrayList<>();
                     }
-                    String methodCompleteSignature = split[2];
-                    String rawReturnType = methodCompleteSignature.split("\\)")[1];
-                    mm.add(new MethodSignature(orig_method,parseType(rawReturnType)));
+                    String[] methodCompleteSignature = split[2].split("\\)");
+                    String rawReturnType = methodCompleteSignature[1];
+                    String rawParameterTypes = methodCompleteSignature[0].substring(1);
+                    List<String> parameterTypes = new ArrayList<>();
+                    while(rawParameterTypes.length()>0){
+                        char c = rawParameterTypes.charAt(0);
+                        rawParameterTypes = rawParameterTypes.substring(1);
+                        switch(c){
+                            case 'I':
+                                parameterTypes.add("int");
+                                break;
+                            case 'Z':
+                                parameterTypes.add("boolean");
+                                break;
+                            case 'D':
+                                parameterTypes.add("double");
+                                break;
+                            case 'F':
+                                parameterTypes.add("float");
+                                break;
+                            case 'B':
+                                parameterTypes.add("byte");
+                                break;
+                            case 'C':
+                                parameterTypes.add("char");
+                                break;
+                            case 'S':
+                                parameterTypes.add("short");
+                                break;
+                            case 'J':
+                                parameterTypes.add("long");
+                                break;
+                            case 'V':
+                                parameterTypes.add("void");
+                                break;
+                            case 'L':
+                                String theType = "";
+                                char cc = rawParameterTypes.charAt(0);
+                                rawParameterTypes = rawParameterTypes.substring(1);
+                                while(cc!=';'){
+                                    theType+=cc;
+                                    cc = rawParameterTypes.charAt(0);
+                                    rawParameterTypes = rawParameterTypes.substring(1);
+                                }
+                                parameterTypes.add(theType.replace("/","."));
+                                break;
+                            case '[':
+                                int dimensions = 1;
+                                while(rawParameterTypes.charAt(0)=='['){
+                                    rawParameterTypes=rawParameterTypes.substring(1);
+                                    dimensions++;
+                                }
+                                char ccc = rawParameterTypes.charAt(0);
+                                rawParameterTypes = rawParameterTypes.substring(1);
+                                String arrayType = "void";
+                                switch(ccc){
+                                    case 'I':
+                                        arrayType="int";
+                                        break;
+                                    case 'Z':
+                                        arrayType="boolean";
+                                        break;
+                                    case 'D':
+                                        arrayType="double";
+                                        break;
+                                    case 'F':
+                                        arrayType="float";
+                                        break;
+                                    case 'B':
+                                        arrayType="byte";
+                                        break;
+                                    case 'C':
+                                        arrayType="char";
+                                        break;
+                                    case 'S':
+                                        arrayType="short";
+                                        break;
+                                    case 'J':
+                                        arrayType="long";
+                                        break;
+                                    case 'L':
+                                        String theType2 = "";
+                                        char cccc = rawParameterTypes.charAt(0);
+                                        rawParameterTypes = rawParameterTypes.substring(1);
+                                        while(cccc!=';'){
+                                            theType2+=cccc;
+                                            cccc = rawParameterTypes.charAt(0);
+                                            rawParameterTypes = rawParameterTypes.substring(1);
+                                        }
+                                        arrayType=theType2.replace("/",".");
+                                        break;
+                                }
+                                for(int i=0;i<dimensions;i++)
+                                    arrayType+="[]";
+                                parameterTypes.add(arrayType);
+                                System.out.println(orig_clazz);
+                                break;
+                        }
+                    }
+                    mm.add(new MethodSignature(orig_method,parseType(rawReturnType),parameterTypes.toArray(new String[0])));
                     methods.put(orig_clazz, mm);
                 }
             }
@@ -72,7 +166,7 @@ public class Mapping
     }
 
     private static String parseType(String rawType){
-        if(rawType.endsWith(";")){
+        if(rawType.startsWith("L")){
             return rawType.substring(1,rawType.length()-1).replace("/",".");
         }
         switch (rawType){
@@ -80,8 +174,18 @@ public class Mapping
                 return "double";
             case "Z":
                 return "boolean";
+            case "S":
+                return "short";
+            case "J":
+                return "long";
             case "I":
                 return "int";
+            case "B":
+                return "byte";
+            case "C":
+                return "char";
+            case "F":
+                return "float";
         }
         return "void";
     }

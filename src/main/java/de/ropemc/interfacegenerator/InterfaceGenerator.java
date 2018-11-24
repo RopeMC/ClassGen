@@ -42,11 +42,19 @@ public class InterfaceGenerator {
         sb.append("public interface "+classNameSimple+" {\n");
         if(mapping.getMethods().containsKey(className)){
             for(MethodSignature ms : mapping.getMethods().get(className)){
+                String params = "";
+                int i=0;
+                for(String pt : ms.getParameterTypes()){
+                    if(params.length()>0)
+                        params+=", ";
+                    params+=pt+" var"+i;
+                    i++;
+                }
                 String thePackage = processPackage(ms.getReturnType());
-                sb.append("    "+ thePackage +" "+ms.getName()+"();\n\n");
+                sb.append("    "+ thePackage +" "+ms.getName()+"("+params+");\n\n");
             }
         }else{
-            sb.append("\n\n");
+            sb.append("\n");
         }
         sb.append("}\n");
         writeFile(outputFile,sb.toString());
