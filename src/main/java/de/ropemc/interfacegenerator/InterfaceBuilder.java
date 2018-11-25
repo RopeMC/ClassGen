@@ -16,7 +16,12 @@ public class InterfaceBuilder {
             "$",
             "tv.twitch",
             "com.mojang",
-            "com.google.common"
+            "com.google.common",
+            "org.lwjgl",
+            "org.apache",
+            "io.netty",
+            "net.minecraft.server.MinecraftServer",
+            "net.minecraft.realms"
     };
 
     private Mapping mapping;
@@ -65,8 +70,13 @@ public class InterfaceBuilder {
     private void process(){
         imports.clear();
         prototypes.clear();
+        List<String> sigs = new ArrayList<>();
         if(mapping.getMethods().containsKey(className)){
             for(MethodSignature ms : mapping.getMethods().get(className)){
+                String sig = ms.getName()+"("+String.join(",",ms.getParameterTypes())+")";
+                if(sigs.contains(sig))
+                    continue;
+                sigs.add(sig);
                 String params = "";
                 int i=0;
                 for(String pt : ms.getParameterTypes()){
@@ -105,6 +115,7 @@ public class InterfaceBuilder {
             newImports.add(i);
         }
         imports = newImports;
+        addImport("de.ropemc.api.wrapper.WrappedClass");
     }
 
     private void addImport(String className){
@@ -133,6 +144,8 @@ public class InterfaceBuilder {
                     importedCommentList.add(shortClassName);
             return shortClassName;
         }
+        if(pClassName.equals("Type"))
+            addImport("java.lang.reflect.Type");
         return pClassName;
     }
 
